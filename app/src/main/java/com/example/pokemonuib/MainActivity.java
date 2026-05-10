@@ -307,34 +307,44 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+/**
+     * Main rendering loop for the map and its entities.
+     * Calculates the bounding box of the camera, handles zoom logic, 
+     * and triggers the painting of creatures on the active Canvas.
+     */
     public void repinta() {
-
-
         if (dibuix.getHolder().getSurface().isValid()) {
+            
+            // Initialization block: Runs only on the first execution to set initial bounds
             if (primeraExecucio) {
                 zoomMin = (dibuix.getHeight() / (float) bmp.getHeight());
-                //zoomMin=1;
                 zoomMax = zoomMin * 10;
                 zoomUpd = 0.2;
-                fe = zoomMin;
-                x = bmp.getWidth() / 2;
-                y = bmp.getHeight() / 2;
+                fe = zoomMin; // Initial scale factor
+                x = bmp.getWidth() / 2f;
+                y = bmp.getHeight() / 2f;
                 primeraExecucio = false;
             }
 
             textoZoom.setText("x " + String.format("%.2f", fe));
             int alt = dibuix.getHeight();
             int ampla = dibuix.getWidth();
+            
+            // Lock the canvas for exclusive drawing
             Canvas canvas = dibuix.getHolder().lockCanvas();
             canvas.drawColor(Color.BLACK);
-            Rect src, dst;
+            
+            // Calculate source dimensions based on the current scale factor
             w = ampla / fe;
             h = alt / fe;
+            
+            // Define the bounding box of the map section currently visible on screen
             x1 = x - (w / 2);
             y1 = y - (h / 2);
             x2 = x + (w / 2);
             y2 = y + (h / 2);
 
+            // Determine which zone the center of the camera is currently looking at
             String zona = calcZona((int) x, (int) y);
             String zonaOficial;
             if (nomsOficials.containsKey(zona)) {
@@ -344,16 +354,24 @@ public class MainActivity extends AppCompatActivity {
             }
             textoUbicacion.setText(zonaOficial);
 
-            src = new Rect((int) x1, (int) y1, (int) x2, (int) y2);
-            dst = new Rect(0, 0, dibuix.getWidth(), dibuix.getHeight());
+            // Draw the map image
+            Rect src = new Rect((int) x1, (int) y1, (int) x2, (int) y2);
+            Rect dst = new Rect(0, 0, dibuix.getWidth(), dibuix.getHeight());
             canvas.drawBitmap(bmp, src, dst, new Paint());
 
+            // Draw the creatures over the map
             pintarCriatura(canvas);
 
+            // Unlock the canvas and render to the screen
             dibuix.getHolder().unlockCanvasAndPost(canvas);
         }
     }
 
+    /**
+     * Renders creatures on the screen, calculates distances between the player and creatures, 
+     * handles their escape behavior, and detects capture collisions.
+     * * @param canvas The canvas to draw the creatures on
+     */
     public void pintarCriatura(Canvas canvas) {
         boolean hiHaCriaturaVisible = false;
 
@@ -361,6 +379,7 @@ public class MainActivity extends AppCompatActivity {
         double centreXmapa = src.centerX();
         double centreYmapa = src.centerY();
 
+        // Iterate through all zones and their creature sets safely using copies of the key sets
         for (String zona : new HashSet<>(critPerZona.keySet())) {
             TreeMap<String, HashSet<Criatures>> perGenere = critPerZona.get(zona);
 
@@ -369,8 +388,11 @@ public class MainActivity extends AppCompatActivity {
 
                 int colorCriatura = colorPerGenere.get(genere);
                 double distanciaDeteccio = distanciaPerGenere.get(genere);
+                
+                // Calculate at which zoom level this specific species becomes visible
                 double factorVisible = zoomMax - distanciaDeteccio * zoomUpd;
 
+                // If the current zoom level is not close enough, skip rendering this species
                 if (fe < factorVisible) continue;
 
                 Iterator<Criatures> it = conjunt.iterator();
@@ -379,12 +401,14 @@ public class MainActivity extends AppCompatActivity {
                     int xc = c.getX();
                     int yc = c.getY();
 
+                    // Check if the creature's coordinates fall within the current visible screen bounds
                     if (xc >= src.left && xc <= src.right && yc >= src.top && yc <= src.bottom) {
+                        
                         double dx = xc - centreXmapa;
                         double dy = yc - centreYmapa;
                         double distancia = Math.sqrt(dx * dx + dy * dy);
 
-                        //Moviment d'escapada del bitxet
+                        // Escape Movement Logic: If the player gets too close (distance < 200)
                         if (distancia < 200) {
                             double velocitat = velocitatPerGenere.get(genere);
                             int nouX = (int) (xc + dx * velocitat);
@@ -394,6 +418,8 @@ public class MainActivity extends AppCompatActivity {
                             c.setY(nouY);
 
                             String zonaNova = calcZona(nouX, nouY);
+                            
+                            // If the creature escapes into a different zone, transfer it to the new zone's set
                             if (!zonaNova.equals(zona)) {
                                 if (critPerZona.containsKey(zonaNova)) {
                                     critPerZona.get(zonaNova).get(genere).add(c);
@@ -401,7 +427,6 @@ public class MainActivity extends AppCompatActivity {
                                 it.remove();
                                 continue;
                             } else {
-
                                 xc = nouX;
                                 yc = nouY;
                                 dx = xc - centreXmapa;
@@ -410,10 +435,11 @@ public class MainActivity extends AppCompatActivity {
                             }
                         }
 
-                        // Coordenades al SurfaceView
+                        // Translate map coordinates to screen coordinates
                         float xs = (float) ((xc - src.left) * fe);
                         float ys = (float) ((yc - src.top) * fe);
 
+                        // Dimensions for rendering the creature
                         float mida = 30;
                         float coordx1 = xs - mida / 2;
                         float coordy1 = ys - mida / 2;
@@ -425,21 +451,26 @@ public class MainActivity extends AppCompatActivity {
                         p.setStyle(Paint.Style.FILL);
                         canvas.drawRect(coordx1, coordy1, coordx2, coordy2, p);
 
+                        // Draw a white border around the creature
                         p.setStyle(Paint.Style.STROKE);
                         p.setColor(Color.WHITE);
                         canvas.drawRect(coordx1, coordy1, coordx2, coordy2, p);
 
                         hiHaCriaturaVisible = true;
 
+                        // Collision Detection: If the player is exactly on the creature (distance < 20)
                         float centreXS = dibuix.getWidth() / 2f;
                         float centreYS = dibuix.getHeight() / 2f;
                         float distCentre = (float) Math.sqrt(Math.pow(xs - centreXS, 2) + Math.pow(ys - centreYS, 2));
+                        
                         if (distCentre < 20) {
                             criaturaActual = c;
                             zonaActual = zona;
                             genereActual = genere;
+                            
+                            // Trigger the mini-game/capture sequence
                             iniciarJocInventari();
-                            it.remove();
+                            it.remove(); // Remove creature from map immediately upon interaction
                             break;
                         }
                     }
@@ -447,25 +478,30 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-
-    float centreXS = dibuix.getWidth() / 2f;
+        // --- Draw User Reticle ---
+        float centreXS = dibuix.getWidth() / 2f;
         float centreYS = dibuix.getHeight() / 2f;
         Paint pCentre = new Paint();
         pCentre.setColor(Color.WHITE);
         pCentre.setStrokeWidth(5);
 
+        // Change reticle shape depending on whether creatures are currently visible on screen
         if (hiHaCriaturaVisible) {
             pCentre.setStyle(Paint.Style.STROKE);
-            canvas.drawCircle(centreXS, centreYS, 20, pCentre);
+            canvas.drawCircle(centreXS, centreYS, 20, pCentre); // Draw circle if creatures are nearby
         } else {
-            canvas.drawLine(centreXS - 20, centreYS, centreXS + 20, centreYS, pCentre);
+            canvas.drawLine(centreXS - 20, centreYS, centreXS + 20, centreYS, pCentre); // Draw crosshair if alone
             canvas.drawLine(centreXS, centreYS - 20, centreXS, centreYS + 20, pCentre);
         }
     }
 
+    /**
+     * Populates the custom Set containing all UI views.
+     * This allows for efficient O(N) iteration when toggling visibility states.
+     */
     public void omplirConjunt() {
-        elementsView = new
-                UnsortedArraySet(17);//Hay 13 Views
+        // Initialize custom UnsortedArraySet with capacity for 17 views
+        elementsView = new UnsortedArraySet<>(17); 
 
         elementsView.add(botonMaximizar);
         elementsView.add(botonMinimizar);
@@ -487,38 +523,41 @@ public class MainActivity extends AppCompatActivity {
         elementsView.add(informacio);
     }
 
-    //Metodo para hacer visible el resto de botones al pulsar el botonMapa
+    /**
+     * Toggles visibility of UI components when the Map mode is activated.
+     * Utilizes the custom iterator from UnsortedArraySet.
+     * * @param v The view that triggered the event (Map button)
+     */
     public void visibilidadBotonesMapa(View v) {
-
-        //Instanciar iterador
         Iterator<View> iterator = elementsView.iterator();
 
-        //Recorrer el conjunto haciendo visible todos los views uno a uno
         while (iterator.hasNext()) {
-
             View viewActual = iterator.next();
-            if ((viewActual == textoCriaturas) || (viewActual == botonesCapturadasRadio) || (viewActual == botonesEscapadasRadio)
-                    || (viewActual == botonesZonasRdio) || (viewActual == botonesCriaturasRadio)) {
+            
+            // Keep List/Radio button views hidden while in Map mode
+            if ((viewActual == textoCriaturas) || (viewActual == botonesCapturadasRadio) || 
+                (viewActual == botonesEscapadasRadio) || (viewActual == botonesZonasRdio) || 
+                (viewActual == botonesCriaturasRadio)) {
                 viewActual.setVisibility(View.INVISIBLE);
             } else {
                 viewActual.setVisibility(View.VISIBLE);
             }
         }
-
     }
 
+    /**
+     * Hides all secondary UI components, retaining only the main navigation buttons.
+     * * @param v The view that triggered the event
+     */
     public void quitarVisibilidadBotonesMapa(View v) {
-
-        //Instanciar iterador
         Iterator<View> iterator = elementsView.iterator();
 
-        //Recorrer el conjunto haciendo visible todos los views uno a uno
         while (iterator.hasNext()) {
-
             View viewActual = iterator.next();
+            
+            // Hide everything except the three main navigational buttons
             if ((viewActual != botonCriaturas) && (viewActual != botonInventario) && (viewActual != botonMapa)) {
                 viewActual.setVisibility(View.INVISIBLE);
-
             }
         }
     }

@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/forma"
+    android:backgroundTint="#AAFFFFFF">
+
+    <!-- Título superior -->
+    <TextView
+        android:id="@+id/dialog_message"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:textAlignment="center"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- Imagen criatura (en el lado izquierdo) -->
+
+    <!-- Botón respuesta de la criatura -->
+
+    <!-- Botón Pedra -->
+
+    <!-- Botón Paper -->
+
+    <ImageView
+        android:id="@+id/creature_image"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:scaleType="fitCenter"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintDimensionRatio="1:1"
+        app:layout_constraintHeight_percent="0.8"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/dialog_message"
+        app:layout_constraintWidth_percent="0.55" />
+
+    <Button
+        android:id="@+id/creature_response"
+        android:layout_width="73dp"
+        android:layout_height="79dp"
+        android:backgroundTint="#00FFFFFF"
+        android:enabled="false"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintDimensionRatio="1:1"
+        app:layout_constraintEnd_toStartOf="@+id/button_paper"
+        app:layout_constraintHeight_percent="0.25"
+        app:layout_constraintHorizontal_bias="0.88"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.49"
+        app:layout_constraintWidth_percent="0.25" />
+
+    <Button
+        android:id="@+id/button_rock"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        android:backgroundTint="#00FFFFFF"
+        android:foreground="@drawable/pedra"
+        android:text="Pedra"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintDimensionRatio="1:1"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHeight_percent="0.20"
+        app:layout_constraintStart_toEndOf="@+id/creature_image"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.171"
+        app:layout_constraintWidth_percent="0.25" />
+
+    <Button
+        android:id="@+id/button_paper"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        android:backgroundTint="#00FFFFFF"
+        android:foreground="@drawable/paper"
+        android:text="Paper"
+        app:layout_constraintDimensionRatio="1:1"
+        app:layout_constraintEnd_toEndOf="@id/button_rock"
+        app:layout_constraintHeight_percent="0.20"
+        app:layout_constraintStart_toStartOf="@id/button_rock"
+        app:layout_constraintTop_toBottomOf="@id/button_rock"
+        app:layout_constraintWidth_percent="0.25" />
+
+    <!-- Botón Tisores -->
+    <Button
+        android:id="@+id/button_scissors"
+        android:layout_width="88dp"
+        android:layout_height="88dp"
+        android:backgroundTint="#00FFFFFF"
+        android:foreground="@drawable/tisores"
+        android:text="Tisores"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintDimensionRatio="1:1"
+        app:layout_constraintEnd_toEndOf="@id/button_paper"
+        app:layout_constraintHeight_percent="0.20"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="@id/button_paper"
+        app:layout_constraintTop_toBottomOf="@+id/button_paper"
+        app:layout_constraintVertical_bias="0.0"
+        app:layout_constraintWidth_percent="0.25" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

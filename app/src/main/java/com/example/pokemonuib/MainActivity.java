@@ -562,158 +562,175 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+/**
+     * Toggles visibility of UI components when the "Creatures" (List/Info) mode is activated.
+     * Shows the text info and radio buttons while hiding map controls.
+     * * @param v The view that triggered the event
+     */
     public void visibilidadBotonesCriaturas(View v) {
-
-        //Volver a poner el fondo del menu principal
+        // Restore the main menu background image
         layoutPrincipal.setBackgroundResource(R.drawable.fonspokeuib);
-        // Instanciar iterador
+        
         Iterator<View> iterator = elementsView.iterator();
 
-        //Recorrer el conjunto de views
+        // Iterate through the custom set of views to update their visibility
         while (iterator.hasNext()) {
             View viewActual = iterator.next();
 
-
+            // Always keep the main navigation buttons visible
             if (viewActual == botonCriaturas || viewActual == botonInventario || viewActual == botonMapa) {
                 viewActual.setVisibility(View.VISIBLE);
 
-                //Ocultar textoEntrada y botonMapa
+            // Explicitly hide the search input and the map button (if applicable to logic)
             } else if (viewActual == textoEntrada || viewActual == botonMapa) {
                 viewActual.setVisibility(View.INVISIBLE);
 
-                //Mostrar los componentes relacionados con criaturas
+            // Show all components related to the Creatures information panel
             } else if (viewActual == textoCriaturas ||
                     viewActual == botonesCapturadasRadio ||
                     viewActual == botonesEscapadasRadio ||
                     viewActual == botonesZonasRdio ||
                     viewActual == botonesCriaturasRadio ||
-                    viewActual==informacio) {
-
+                    viewActual == informacio) {
                 viewActual.setVisibility(View.VISIBLE);
 
-                // Todo lo demás se oculta
+            // Hide everything else (map, zoom buttons, location texts)
             } else {
                 viewActual.setVisibility(View.INVISIBLE);
             }
         }
     }
 
-
+    /**
+     * Hides the Creatures information panel and restores the default state.
+     * * @param v The view that triggered the event
+     */
     public void quitarVisibilidadBotonesCriaturas(View v) {
-        //Instanciar iterador
         Iterator<View> iterator = elementsView.iterator();
 
-        //Recorrer el conjunto y volver a hacer visibles los elementos ocultos
         while (iterator.hasNext()) {
             View viewActual = iterator.next();
+            
             if ((viewActual == botonCriaturas) || (viewActual == botonInventario) || (viewActual == botonMapa)) {
                 viewActual.setVisibility(View.VISIBLE);
-
             } else {
                 viewActual.setVisibility(View.INVISIBLE);
             }
         }
     }
 
+    // --- OnClick Listeners for Main Navigation ---
+
+    /**
+     * Handles the click event for the "Map" button.
+     * Toggles the map view, updates the background, and triggers rendering.
+     * * @param v The view that triggered the event
+     */
     public void onClickBotMapa(View v) {
-                ocultarInv=true;
+        ocultarInv = true;
 
-
+        // Hide creature-related UI components
         informacio.setVisibility(View.INVISIBLE);
         botonesCriaturasRadio.setVisibility(View.INVISIBLE);
         botonesZonasRdio.setVisibility(View.INVISIBLE);
         botonesCapturadasRadio.setVisibility(View.INVISIBLE);
         botonesEscapadasRadio.setVisibility(View.INVISIBLE);
-
-
         textoCriaturas.setVisibility(View.INVISIBLE);
 
         ocultarInventari();
+        
+        // Reset other button states
         botonInventarioPulsado = false;
         botonCriaturasPulasado = false;
-        //Cambiar el valor del booleano
+        
+        // Toggle map state
         botonMapaPulsado = !botonMapaPulsado;
 
         if (botonMapaPulsado) {
-            layoutPrincipal.setBackgroundColor(Color.WHITE);
+            layoutPrincipal.setBackgroundColor(Color.WHITE); // Solid background for map rendering
             visibilidadBotonesMapa(v);
-
-            repinta();
-
+            repinta(); // Start drawing the map
         } else {
-            //Volver a poner el fondo del menu principal
+            // Restore default main menu background
             layoutPrincipal.setBackgroundResource(R.drawable.fonspokeuib);
             quitarVisibilidadBotonesMapa(v);
         }
     }
 
-
+    /**
+     * Handles the click event for the "Creatures" list button.
+     * * @param v The view that triggered the event
+     */
     public void onClickCriaturas(View v) {
-
-        ocultarInv=true;
+        ocultarInv = true;
         botonMapaPulsado = false;
         botonCriaturasPulasado = !botonCriaturasPulasado;
         botonInventarioPulsado = false;
+        
         ocultarInventari();
-        informacio.scrollTo(0,0);// es posa al principi
+        informacio.scrollTo(0,0); // Scroll text view to the top
 
-        actualitzarTextCriatures();
+        actualitzarTextCriatures(); // Refresh the text data
 
         if (botonCriaturasPulasado) {
             informacio.setVisibility(View.VISIBLE);
             visibilidadBotonesCriaturas(v);
         } else {
             informacio.setVisibility(View.INVISIBLE);
-
             quitarVisibilidadBotonesCriaturas(v);
         }
-
     }
 
+    /**
+     * Handles the click event for the "Inventory" button.
+     * Repurposes the SurfaceView (dibuix) to render the captured creatures grid.
+     * * @param v The view that triggered the event
+     */
     public void onClickInventari(View v) {
-
-        //Volver a poner el fondo del menu principal
+        // Restore main menu background
         layoutPrincipal.setBackgroundResource(R.drawable.fonspokeuib);
         Iterator<View> iterator = elementsView.iterator();
 
-        //Recorrer el conjunto haciendo visible todos los views uno a uno
         while (iterator.hasNext()) {
-
             View viewActual = iterator.next();
-            if ((viewActual == botonCriaturas) || (viewActual == botonInventario) || (viewActual == botonMapa)
-                    ||(viewActual==dibuix) ) {
+            // Keep main buttons and the SurfaceView (canvas) visible
+            if ((viewActual == botonCriaturas) || (viewActual == botonInventario) || (viewActual == botonMapa) || (viewActual == dibuix)) {
                 viewActual.setVisibility(View.VISIBLE);
             } else {
                 viewActual.setVisibility(View.INVISIBLE);
             }
         }
 
+        // Hide list UI elements
         informacio.setVisibility(View.INVISIBLE);
         botonesCriaturasRadio.setVisibility(View.INVISIBLE);
         botonesZonasRdio.setVisibility(View.INVISIBLE);
         botonesCapturadasRadio.setVisibility(View.INVISIBLE);
         botonesEscapadasRadio.setVisibility(View.INVISIBLE);
 
-        ocultarInv=!ocultarInv;
+        ocultarInv = !ocultarInv;
+        
         if(ocultarInv){
             ocultarInventari();
-        }else {
+        } else {
             informacio.setVisibility(View.INVISIBLE);
             botonMapaPulsado = false;
             botonCriaturasPulasado = false;
             botonInventarioPulsado = true;
 
             dibuix.setVisibility(View.VISIBLE);
-
-            pintarInventari();
-
+            pintarInventari(); // Render the grid of captured creatures
             botonInventarioPulsado = false;
         }
     }
 
+    /**
+     * Clears the SurfaceView and hides it when closing the inventory.
+     */
     private void ocultarInventari() {
         if (!dibuix.getHolder().getSurface().isValid()) return;
 
+        // Paint the canvas white to clear previous drawings before hiding
         Canvas canvas = dibuix.getHolder().lockCanvas();
         canvas.drawColor(Color.WHITE);
         dibuix.getHolder().unlockCanvasAndPost(canvas);
@@ -721,70 +738,86 @@ public class MainActivity extends AppCompatActivity {
         dibuix.setVisibility(View.INVISIBLE);
     }
 
-
+    /**
+     * Helper method to map a Rock-Paper-Scissors move string to its drawable resource ID.
+     * * @param jugada The move played ("pedra", "paper", "tisores", etc.)
+     * @return The resource ID of the corresponding image, or 0 if not found
+     */
     private int obtenerImagen(String jugada) {
         switch (jugada) {
-            case "pedra":
-                return R.drawable.pedra;
-            case "pedrax":
-                return R.drawable.pedrax;
-            case "paper":
-                return R.drawable.paper;
-            case "paperx":
-                return R.drawable.paperx;
-            case "tisores":
-                return R.drawable.tisores;
-            case "tisoresx":
-                return R.drawable.tisoresx;
-            default:
-                return 0; // importante: 0 indica recurso no encontrado
+            case "pedra": return R.drawable.pedra;
+            case "pedrax": return R.drawable.pedrax;
+            case "paper": return R.drawable.paper;
+            case "paperx": return R.drawable.paperx;
+            case "tisores": return R.drawable.tisores;
+            case "tisoresx": return R.drawable.tisoresx;
+            default: return 0; // 0 indicates resource not found
         }
     }
 
+    // --- OnClick Listeners for Map Zoom Controls ---
+
+    /**
+     * Increases the map zoom scale by one step.
+     * * @param v The view that triggered the event
+     */
     public void onClickMaximizar(View v) {
         if (fe == zoomMax) {
             repinta();
         } else {
-            fe += zoomMin;
+            fe += zoomMin; // Increase scale factor
             repinta();
-
         }
     }
 
+    /**
+     * Decreases the map zoom scale by one step.
+     * * @param v The view that triggered the event
+     */
     public void onClickMinimizar(View v) {
-
         if (fe == zoomMin) {
             repinta();
         } else {
-            fe -= zoomMin;
+            fe -= zoomMin; // Decrease scale factor
+            
+            // Prevent zooming out beyond the minimum scale
             if (fe < zoomMin) {
-                x = bmp.getWidth() / 2;
-                y = bmp.getHeight() / 2;
+                x = bmp.getWidth() / 2f;
+                y = bmp.getHeight() / 2f;
                 fe = zoomMin;
             }
             repinta();
         }
-
     }
 
+    /**
+     * Maximizes the map zoom to the highest allowed limit instantly.
+     * * @param v The view that triggered the event
+     */
     public void onClickMaximizarMax(View v) {
-
         fe = zoomMax;
         repinta();
     }
 
+    /**
+     * Minimizes the map zoom to the lowest allowed limit instantly, centering the map.
+     * * @param v The view that triggered the event
+     */
     public void onClickMaximizarMin(View v) {
-        x = bmp.getWidth() / 2;
-        y = bmp.getHeight() / 2;
-
+        // Reset coordinates to the center of the map
+        x = bmp.getWidth() / 2f;
+        y = bmp.getHeight() / 2f;
         fe = zoomMin;
         repinta();
     }
 
+    /**
+     * Handles clicks on the RadioButtons to update the information displayed in the text area.
+     * * @param v The view that triggered the event
+     */
     public void onClickRadioCriaturas(View v){
         actualitzarTextCriatures();
     }
-
     //MÉTODES PER PODER FER POSSIBLE LA INTERACCIÓ AMB ELS DITS
     @Override
     public boolean onTouchEvent(MotionEvent event) {

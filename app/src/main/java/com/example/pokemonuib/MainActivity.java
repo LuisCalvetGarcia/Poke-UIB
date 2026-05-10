@@ -49,15 +49,17 @@ import java.util.TreeSet;
 import android.text.Editable;
 import android.text.TextWatcher;
 
-
+/**
+ * Main Activity for the Mystic World UIB game.
+ * Handles the main UI layout, map rendering, touch gestures, and core game mechanics.
+ */
 public class MainActivity extends AppCompatActivity {
 
-
-    ///////////////////////DECLARACIÓN VARIABLES///////////////////////
+    // --- UI Elements ---
     private Button botonMaximizar;
     private Button botonMinimizar;
-    private Button botonMaximizarMax;//*El boton que maximiza al maximo
-    private Button botonMinimizarMin;//*El boton que minimiza al mínimo
+    private Button botonMaximizarMax; // Maximizes to the maximum allowed zoom
+    private Button botonMinimizarMin; // Minimizes to the minimum allowed zoom
     private Button botonMapa;
     private Button botonCriaturas;
     private Button botonInventario;
@@ -65,97 +67,83 @@ public class MainActivity extends AppCompatActivity {
     private TextView textoPuntos;
     private TextView textoZoom;
 
-    private EditText textoEntrada; //Per cercar zona
-    public SurfaceView dibuix;
+    private EditText textoEntrada;    // Input field to search for a specific zone
+    public SurfaceView dibuix;        // Canvas surface for rendering the map and creatures
     private TextView textoCriaturas;
     private RadioButton botonesCriaturasRadio;
     private RadioButton botonesZonasRdio;
     private RadioButton botonesCapturadasRadio;
     private RadioButton botonesEscapadasRadio;
-
     private TextView informacio;
+    private ConstraintLayout layoutPrincipal; // Reference to the main background layout
 
-
-    private UnsortedArraySet<View> elementsView;
-    private ConstraintLayout layoutPrincipal;//Hace referencia al fondo
-
+    // --- State Variables ---
+    private UnsortedArraySet<View> elementsView; // Custom set to manage UI views
     private boolean botonMapaPulsado = false;
     private boolean botonCriaturasPulasado = false;
-
     private boolean botonInventarioPulsado = false;
-
     private Context context;
+    private static Bitmap bmp; // Main map image
 
-    private static Bitmap bmp;
-
+    // --- Map & Camera Coordinates ---
     private double zoomMin;
-
     private double zoomMax;
-
     private double zoomUpd;
-    private double x, y;
-
-    private double x1;
-    private double y1;
-    private double x2;
-    private double y2;
-
-    private double h;
-    private double w;
-    private double fe;
+    private double x, y; // Current camera center coordinates
+    private double x1, y1, x2, y2; // Bounding box coordinates
+    private double h, w; // Screen dimensions
+    private double fe;   // Scale factor
     private boolean primeraExecucio = true;
 
+    // --- Touch & Gesture Controls ---
     double cursorX;
     double cursorY;
     private boolean zoom;
-    private boolean arrossegar;
-
+    private boolean arrossegar; // Dragging state flag
     private ScaleGestureDetector scaleDetector;
-
     private double cursorXPrevio;
     private double cursorYPrevio;
 
+    // --- Game Logic Variables ---
     private boolean ocultarInv = false;
-
     private Dialog dialog;
-
-    Map<String, String> guanyador = new HashMap<>();
+    Map<String, String> guanyador = new HashMap<>(); // Rock-Paper-Scissors rules
     private String[] opciones = {"pedra", "paper", "tisores"};
-
     boolean empat;
-
     private double puntsTotals = 0;
-
     private TextView missatgeSuperior;
-
     private Criatures criaturaActual = null;
     private String zonaActual = null;
     private String genereActual = null;
-
     private boolean mostrarDialeg = false;
 
+    // --- Data Structures (Sets & Mappings) ---
     private String[] generes = {"vapordrac", "focguard", "tornadrac", "aiguard"};
-    HashMap<String, String> nomsOficials = new HashMap<>();//zona popular → nom oficial
-    TreeMap<String, Rect> zones = new TreeMap<>();
+    HashMap<String, String> nomsOficials = new HashMap<>(); // Popular zone name -> Official zone name
+    TreeMap<String, Rect> zones = new TreeMap<>();          // Popular zone name -> Bounding Rectangle
+    
+    // Creature Attributes Mappings
     HashMap<String, Double> velocitatPerGenere = new HashMap<>();
     HashMap<String, Integer> colorPerGenere = new HashMap<>();
     HashMap<String, Integer> puntsPerGenere = new HashMap<>();
     HashMap<String, Double> distanciaPerGenere = new HashMap<>();
 
+    // Nested Mapping: Zone -> (Genre -> Set of Creatures)
     HashMap<String, TreeMap<String, HashSet<Criatures>>> critPerZona = new HashMap<>();
 
+    // Inventory Mappings: Official Zone Name -> Set of Captured/Escaped Creatures
     TreeMap<String, HashSet<Criatures>> criaturesCapturades = new TreeMap<>();
     TreeMap<String, HashSet<Criatures>> criaturesEscapades = new TreeMap<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        // Force landscape orientation for better map viewing
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
 
-
-        ///////////////////////ASOSIACIÓN DE VARIABLES CON BOTONES///////////////////////
+        // --- UI Initialization & Binding ---
         botonMaximizar = findViewById(R.id.button9);
         botonMinimizar = findViewById(R.id.button10);
         botonMaximizarMax = findViewById(R.id.button8);
@@ -176,18 +164,19 @@ public class MainActivity extends AppCompatActivity {
         textoCriaturas = findViewById(R.id.textView);
         informacio = findViewById(R.id.textView5);
 
-
         context = getApplicationContext();
+        
+        // Load map image without automatic scaling to preserve coordinates
         BitmapFactory.Options opcions = new BitmapFactory.Options();
         opcions.inScaled = false;
         bmp = BitmapFactory.decodeResource(context.getResources(), R.drawable.mapam, opcions);
 
-        scaleDetector = new ScaleGestureDetector(
-                dibuix.getContext(), new ScaleListener());
-        //Metodo para almacenar los Views en un conjunto
+        scaleDetector = new ScaleGestureDetector(dibuix.getContext(), new ScaleListener());
+        
+        // Store view references in our custom set for bulk visibility operations
         omplirConjunt();
 
-
+        // Initially hide all map-related UI elements
         botonMaximizar.setVisibility(View.INVISIBLE);
         botonMinimizar.setVisibility(View.INVISIBLE);
         botonMaximizarMax.setVisibility(View.INVISIBLE);
@@ -203,18 +192,17 @@ public class MainActivity extends AppCompatActivity {
         botonesCapturadasRadio.setVisibility(View.INVISIBLE);
         botonesEscapadasRadio.setVisibility(View.INVISIBLE);
 
-
+        // --- JSON Parsing & Zone Initialization ---
         try {
             String jsonString = llegirJSON(context, R.raw.zones);
             JSONObject jsonObject = new JSONObject(jsonString);
-            JSONArray arr = jsonObject.getJSONArray("zones_coords");//Obtener array de zonas
+            JSONArray arr = jsonObject.getJSONArray("zones_coords"); // Retrieve zones array
 
             for (int i = 0; i < arr.length(); i++) {
-                JSONObject obj = arr.getJSONObject(i);//Obtener i-ésimo objeto zona
+                JSONObject obj = arr.getJSONObject(i); // Get i-th zone object
 
                 String nomPopular = obj.getString("zona");
                 String nomOficial = obj.getString("nom");
-
 
                 int x1 = obj.getInt("x1");
                 int y1 = obj.getInt("y1");
@@ -223,12 +211,14 @@ public class MainActivity extends AppCompatActivity {
 
                 Rect r = new Rect(x1, y1, x2, y2);
                 nomsOficials.put(nomPopular, nomOficial);
-                zones.put(nomPopular, r);// Guardar nombre oficial
+                zones.put(nomPopular, r); // Store bounding box linked to popular name
 
+                // Initialize empty creature sets for each genre in this zone
                 TreeMap<String, HashSet<Criatures>> aux2 = new TreeMap<>();
                 for (String g : generes) {
                     aux2.put(g, new HashSet<Criatures>());
                 }
+                
                 criaturesCapturades.put(nomOficial, new HashSet<>());
                 criaturesEscapades.put(nomOficial, new HashSet<>());
                 critPerZona.put(nomPopular, aux2);
@@ -238,8 +228,7 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
 
-
-        //Omplir els mappings
+        // --- Populate Creature Attributes Mappings ---
         velocitatPerGenere.put("aiguard", 0.01 * 2);
         velocitatPerGenere.put("focguard", 0.015 * 2);
         velocitatPerGenere.put("tornadrac", 0.02 * 2);
@@ -260,41 +249,42 @@ public class MainActivity extends AppCompatActivity {
         distanciaPerGenere.put("tornadrac", 2.5);
         distanciaPerGenere.put("vapordrac", 3.5);
 
+        // Define winning rules for Rock-Paper-Scissors (Key beats Value)
         guanyador.put("pedra", "tisores");
         guanyador.put("tisores", "paper");
         guanyador.put("paper", "pedra");
 
         informacio.setMovementMethod(new ScrollingMovementMethod());
 
+        // Spawn initial creatures across the map
         generarCriatures();
 
+        // --- Search Bar Listener ---
         textoEntrada.addTextChangedListener(new TextWatcher() {
             @Override
-            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-            }
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
 
             @Override
-            public void onTextChanged(CharSequence s, int start, int before, int count) {
-            }
+            public void onTextChanged(CharSequence s, int start, int before, int count) { }
 
             @Override
             public void afterTextChanged(Editable editable) {
                 String zonaInput = editable.toString().trim().toLowerCase();
 
-                if (zonaInput.isEmpty()) return;//Si esta buida, retturn
+                if (zonaInput.isEmpty()) return; // Exit if input is empty
 
-                //Verificar si existeix la zona introduida
+                // Verify if the requested zone exists
                 if (zones.containsKey(zonaInput)) {
                     Rect r = zones.get(zonaInput);
 
-                    //Càlcul del centre del rectangle
+                    // Calculate center coordinates of the zone's bounding box
                     x = r.centerX();
                     y = r.centerY();
 
-                    //Actualitzar fe
+                    // Adjust zoom scale to focus on the zone
                     fe = zoomMax - 3 * zoomUpd;
 
-                    //Mostrar el nombre "oficial" si existeix
+                    // Display official name if available
                     String nomOficial = nomsOficials.get(zonaInput);
                     if (nomOficial != null) {
                         textoUbicacion.setText(nomOficial);
@@ -302,12 +292,14 @@ public class MainActivity extends AppCompatActivity {
                         textoUbicacion.setText(zonaInput);
                     }
                 } else {
-                    textoUbicacion.setText("Zona no trobada");
+                    textoUbicacion.setText("Zona no trobada"); // Zone not found
                 }
-                repinta();//Cridam el repinta amb les noe
+                
+                repinta(); // Request map redraw with new coordinates
             }
         });
 
+        // Handle edge-to-edge system bar insets
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);

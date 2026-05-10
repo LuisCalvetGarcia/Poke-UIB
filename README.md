@@ -1,4 +1,4 @@
-# 🐉 Poke-UIB: El Món Místic a la UIB
+# 🐉 Poke UIB
 
 <p align="center">
   <img src="screenshots/menu.jpg" width="900" alt="Poke-UIB Main Menu">

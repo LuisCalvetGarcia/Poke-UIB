@@ -8,7 +8,7 @@
 [![Platform: Android](https://img.shields.io/badge/Platform-Android-3DDC84.svg?logo=android)](https://www.android.com)
 [![Language: Java](https://img.shields.io/badge/Language-Java-ED8B00?style=flat&logo=openjdk&logoColor=white)](https://www.oracle.com/java/)
 
-## 📝 Project Overview
+## 📝 Project Overview 
 [cite_start]**Poke-UIB** is a location-based interactive game developed for the **Algorithms and Data Structures II** course at the **University of the Balearic Islands (UIB)**[cite: 1, 4]. [cite_start]The project is based on a narrative where mythical creatures (*Vapordrac, Focguard, Tornadrac, and Aiguard*) have been rediscovered on campus through "arcane detection technology"[cite: 9, 14, 15].
 
 [cite_start]The main objective is to explore the campus, detect these creatures, and reach collaboration pacts with them through a mini-game[cite: 19, 23, 25].

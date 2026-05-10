@@ -1,7 +1,7 @@
-# 🐉 Poke-UIB: The Mystic World at UIB
+# 🐉 Poke-UIB: El Món Místic a la UIB
 
 <p align="center">
-  <img src="screenshots/menu_principal.jpg" width="800" alt="Poke-UIB Main Menu">
+  <img src="screenshots/menu_principal.jpg" width="900" alt="Poke-UIB Main Menu">
 </p>
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -9,48 +9,82 @@
 [![Language: Java](https://img.shields.io/badge/Language-Java-ED8B00?style=flat&logo=openjdk&logoColor=white)](https://www.oracle.com/java/)
 
 ## 📝 Project Overview
-[cite_start]**Poke-UIB** is an immersive, location-based Android application developed as the final project for the **Algorithms and Data Structures II** course at the **University of the Balearic Islands (UIB)**[cite: 1, 4].
+[cite_start]**Poke-UIB** is a location-based interactive game developed for the **Algorithms and Data Structures II** course at the **University of the Balearic Islands (UIB)**[cite: 1, 4]. [cite_start]The project is based on a narrative where mythical creatures (*Vapordrac, Focguard, Tornadrac, and Aiguard*) have been rediscovered on campus through "arcane detection technology"[cite: 9, 14, 15].
 
-[cite_start]The project challenges students to build a complex system capable of managing a large-scale ecosystem of mythical creatures (*Vapordrac, Focguard, Tornadrac, and Aiguard*) within the UIB campus[cite: 19, 32]. [cite_start]The core focus is on the efficient implementation of **Advanced Data Structures** to handle entity tracking, spatial queries, and real-time game state management[cite: 21, 204].
+[cite_start]The main objective is to explore the campus, detect these creatures, and reach collaboration pacts with them through a mini-game[cite: 19, 23, 25].
 
 ---
 
-## 🎮 Game Mechanics
+## 🎮 Game Mechanics & Functionalities
 
 ### 1. Exploration and Detection
-[cite_start]The game world is a high-resolution map of the UIB campus (6144x4096 px)[cite: 26, 153]. [cite_start]Using a specialized "arcane energy sensor," players can detect creatures hidden in a parallel reality[cite: 15, 19].
-
-* [cite_start]**Spatial Division:** The map is divided into functional zones (buildings, departments, and services) based on precise coordinates[cite: 28, 46].
-* [cite_start]**Sensor Behavior:** The reticle at the center of the screen changes from a **white cross** (no creatures nearby) to a **white circle** when entities are within detection range[cite: 90, 91].
-* **Dynamic Zoom:** Visibility depends on the creature's genre. [cite_start]Some are visible from a distance, while others require high-level zoom to be detected[cite: 53, 85].
+[cite_start]The game features a high-resolution map (6144x4096 px) of the UIB campus[cite: 26, 153].
+* [cite_start]**Zonal Division:** The map is divided into buildings and services (Jovellanos, Guillem Cifre, etc.)[cite: 28, 46].
+* [cite_start]**Smart Sensor:** A reticle at the center of the screen tracks the player's position[cite: 90]. [cite_start]It changes from a **white cross** to a **white circle** when creatures are within detection range[cite: 91, 108].
+* [cite_start]**Visibility Factors:** Each genre has a specific detection distance and movement speed, requiring players to use zoom controls effectively[cite: 38, 43, 56].
 
 <p align="center">
-  <img src="screenshots/pantalla_juego.jpg" width="700" alt="Gameplay and Map Interface">
+  <img src="screenshots/pantalla_juego.jpg" width="800" alt="Gameplay and Map Interface">
 </p>
 
-### 2. The Capture Mini-Game
-[cite_start]When a player's coordinates collide with a creature's position, a "Rock, Paper, Scissors" challenge is triggered[cite: 25, 93].
-* [cite_start]**Victory:** The creature accepts a pact and is added to the **Captured Inventory**[cite: 96, 208].
-* [cite_start]**Defeat:** The creature escapes and is logged in the **Escaped History**[cite: 97, 209].
-* [cite_start]**Reward System:** Points are awarded based on the rarity of the genre: **Aiguard** (10), **Focguard** (15), **Tornadrac** (20), and **Vapordrac** (30)[cite: 42].
+### 2. The Capture Mini-Game (The Pact)
+[cite_start]When a collision occurs between the player and a creature, a "Rock, Paper, Scissors" challenge begins[cite: 25, 93].
+* [cite_start]**Win:** The creature is added to your **Captured Inventory** and you gain points[cite: 96, 40].
+* [cite_start]**Loss:** The creature escapes and is logged in the **Escaped History**[cite: 97].
+* [cite_start]**Draw:** The round is repeated until a winner is decided[cite: 95].
+
+### 3. Real-Time Data Visualization
+The application provides detailed reports of the campus ecosystem:
+* [cite_start]**Creatures per Zone:** Count of active creatures by genre[cite: 112].
+* [cite_start]**Map Zones:** Official names and bounding box coordinates[cite: 114].
+* [cite_start]**Interaction Logs:** Detailed lists of every creature captured or escaped[cite: 110, 143, 144].
+
+<p align="center">
+  <img src="screenshots/criaturas_zona.jpg" width="30%">
+  <img src="screenshots/lista_critaturas_capturadas.jpg" width="30%">
+  <img src="screenshots/lista_critaturas_escapadas.jpg" width="30%">
+</p>
 
 ---
 
-## 🛠️ Technical Architecture
+## 🛠️ Technical Implementation: Architecture & Files
 
-### Core Data Structures
-[cite_start]A key requirement was implementing custom collections to ensure optimal computational costs ($O(N)$ or $O(log N)$ where applicable)[cite: 213, 216].
+### 1. `MainActivity.java` (The Engine)
+This is the core of the application. It handles:
+* **Canvas Rendering:** Using `SurfaceView` to draw the map and entities dynamically.
+* **Touch Logic:** Implementation of `ScaleGestureDetector` for pinch-to-zoom and dragging mechanics.
+* [cite_start]**Procedural Spawning:** An algorithm that generates 500 initial creatures and distributes them randomly across valid zones defined in JSON[cite: 29].
+* **UI State Management:** Efficiently toggling visibility for over 15 different `View` components using custom Sets.
 
-1.  [cite_start]**Custom Sets (`UnsortedArraySet` / `UnsortedLinkedListSet`):** Used to manage dynamic collections of creatures and UI elements without duplicates[cite: 205, 212].
-2.  [cite_start]**Mapping Systems (Dictionaries):** * **Zone -> (Genre -> Set):** A nested mapping structure to organize the 500 initial creatures by location and type[cite: 29, 205].
-    * [cite_start]**Search Engine:** A mapping that links "popular names" (for user search) to "official names" (for UI display)[cite: 194, 207].
-    * [cite_start]**Attribute Registry:** Stores specific genre constants like movement speed and detection radius[cite: 38, 43, 210].
+### 2. Data Files and Assets
+* **`zones.json`**: Defines the spatial grid of the campus. [cite_start]Each zone contains a popular name (for search), official name, and coordinates (`x1, y1` to `x2, y2`)[cite: 156, 194, 198].
+* [cite_start]**Creature Sprites:** 32 unique species (8 variants per genre) used for the inventory and capture dialogs[cite: 34, 154].
 
-### Data Management and JSON
-[cite_start]The application's environment is defined by an external `zones.json` file. [cite_start]Each zone is represented as a `Rect` object defined by two coordinate points[cite: 198, 201]:
-```json
-{
-  "zona": "jovellanos",
-  "nom": "Gaspar Melchor de Jovellanos",
-  "x1": 2893, "y1": 920, "x2": 3432, "y2": 1446
-}
+<p align="center">
+  <img src="screenshots/crituras_disponibles.jpg" width="45%" alt="Available Species">
+  <img src="screenshots/criaturas_capturadas.jpg" width="45%" alt="Captured Progress">
+</p>
+
+---
+
+## 🧠 Advanced Data Structures
+[cite_start]The project strictly follows academic requirements to optimize memory and computational cost[cite: 21, 216]:
+
+* **Custom Sets (`UnsortedArraySet` / `UnsortedLinkedListSet`):** - Used to store UI `View` elements for bulk operations.
+    - Used to manage sets of creatures within each zone to ensure no duplicates.
+* **Mappings (Dictionaries):** - **`critPerZona`**: A nested `HashMap<String, TreeMap<String, HashSet<Criatures>>>` that links zones to their respective creature types.
+    - **`nomsOficials`**: Translates user search queries to official building names.
+    - [cite_start]**Attribute Maps**: Store genre-specific constants (points, speed, colors)[cite: 38, 39, 40].
+* **Iterators:** All custom collections implement the `Iterator` interface for clean and efficient $O(N)$ traversal during rendering loops.
+
+---
+
+## 📂 File Structure
+* `app/src/main/java/`: Logic for Sets, the `Criatures` model, and `MainActivity`.
+* `app/src/main/res/raw/`: External data (`zones.json`).
+* `app/src/main/res/drawable/`: High-res map and species sprites.
+* `app/src/main/res/layout/`: XML designs for the main interface and capture dialogs.
+
+---
+
+[cite_start]*Project developed for the Computer Engineering degree at UIB (2024-25)*[cite: 1, 2].

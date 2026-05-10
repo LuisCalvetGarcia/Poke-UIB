@@ -818,115 +818,120 @@ public class MainActivity extends AppCompatActivity {
     public void onClickRadioCriaturas(View v){
         actualitzarTextCriatures();
     }
-    //MÉTODES PER PODER FER POSSIBLE LA INTERACCIÓ AMB ELS DITS
+   // --- Touch Interaction Methods ---
+
+    /**
+     * Handles touch screen motion events for dragging and zooming the map.
+     * * @param event The motion event triggered by the user's touch
+     * @return boolean True if the event was handled, false otherwise
+     */
     @Override
     public boolean onTouchEvent(MotionEvent event) {
 
+        // Only process map interactions if the Map view is active
         if (botonMapaPulsado) {
             double xCentroAnterior;
             double yCentroAnterior;
 
-
+            // Pass the event to the scale detector for pinch-to-zoom gestures
             scaleDetector.onTouchEvent(event);
 
             cursorX = event.getX();
             cursorY = event.getY();
 
-
             double dx, dy;
-
 
             switch (event.getAction() & MotionEvent.ACTION_MASK) {
                 case MotionEvent.ACTION_DOWN:
-                    // quan es pitja amb un dit=trasladar
+                    // Single finger touch: Initiate dragging
                     arrossegar = true;
                     zoom = false;
                     cursorXPrevio = cursorX;
                     cursorYPrevio = cursorY;
-
                     break;
+                    
                 case MotionEvent.ACTION_POINTER_DOWN:
-                    // quan es pitja amb un segon dit=arrosegar=false
+                    // Second finger touch: Stop dragging, initiate zooming
                     arrossegar = false;
                     zoom = true;
                     break;
+                    
                 case MotionEvent.ACTION_MOVE:
-
-
-                    //Rellenar
+                    // Finger moving across the screen
                     if (arrossegar) {
-
                         xCentroAnterior = x;
                         yCentroAnterior = y;
+                        
                         dx = cursorX - cursorXPrevio;
                         dy = cursorY - cursorYPrevio;
 
                         cursorXPrevio = cursorX;
                         cursorYPrevio = cursorY;
 
+                        // Adjust camera center based on drag delta (scaled for smoothness)
                         x = x - 0.5 * dx;
                         y = y - 0.5 * dy;
 
+                        // Calculate new bounding box
                         x1 = x - (w / 2);
                         y1 = y - (h / 2);
                         x2 = x + (w / 2);
                         y2 = y + (h / 2);
+                        
+                        // Prevent dragging the camera outside the map boundaries
                         if ((x1 > 0) && (y1 > 0) && (x2 < bmp.getWidth() && (y2 < bmp.getHeight()))) {
                             repinta();
-
-
                         } else {
+                            // Revert to previous position if boundary is hit
                             x = xCentroAnterior;
                             y = yCentroAnterior;
                         }
-
                     }
-
-
-                    // quan es va movent el dit
                     break;
+                    
                 case MotionEvent.ACTION_UP:
-                    // quan s’aixeca el dit
+                    // Finger lifted: End dragging and zooming
                     zoom = false;
                     arrossegar = false;
                     break;
             }
         }
         return false;
-
     }
 
+    /**
+     * Inner class to handle scale gestures (pinch-to-zoom).
+     */
     private class ScaleListener extends ScaleGestureDetector.SimpleOnScaleGestureListener {
         @Override
         public boolean onScale(ScaleGestureDetector detector) {
-
-            // Aquí podem recuperar el factor d’escalat
-            // que es detecti amb: detector.getScaleFactor();
-            // i el podeu utilitzar per actualitzar el vostre
-            // factor d’escalat (multiplicau els dos factors)
-
+            // Update the current scale factor by multiplying with the detector's factor
             fe = fe * detector.getScaleFactor();
 
+            // Clamp the scale factor to defined min and max bounds
             if (fe > zoomMax) {
                 fe = zoomMax;
-
-
             } else if (fe < zoomMin) {
-                x = bmp.getWidth() / 2;
-                y = bmp.getHeight() / 2;
+                // If zoomed out completely, re-center the map
+                x = bmp.getWidth() / 2f;
+                y = bmp.getHeight() / 2f;
                 fe = zoomMin;
             }
 
-            repinta();
+            repinta(); // Redraw the map with the new scale
             return true;
         }
     }
 
-    //Aquest mètode contè tota la lògica  referent a l'execució del joc "Pedra, paper i tisores"
+    // --- Mini-Game & Core Logic ---
+
+    /**
+     * Contains the logic for executing the "Rock, Paper, Scissors" mini-game
+     * triggered upon capturing a creature.
+     */
     private void iniciarJocInventari() {
 
         dialog = new Dialog(dibuix.getContext());
-
         dialog.setContentView(R.layout.dialog_joc);
         dialog.getWindow().setLayout((int) (dibuix.getWidth() * 0.9), (int) (dibuix.getHeight() * 0.9));
         dialog.setCancelable(false);
@@ -940,7 +945,7 @@ public class MainActivity extends AppCompatActivity {
         Button rock = dialog.findViewById(R.id.button_rock);
         Button paper = dialog.findViewById(R.id.button_paper);
         Button scissors = dialog.findViewById(R.id.button_scissors);
-        Button response = dialog.findViewById(R.id.creature_response);
+        Button response = dialog.findViewById(R.id.creature_response); // Creature's move display
 
         rock.setEnabled(true);
         paper.setEnabled(true);
@@ -959,10 +964,12 @@ public class MainActivity extends AppCompatActivity {
             else if (v == paper) userChoice = "paper";
             else if (v == scissors) userChoice = "tisores";
 
+            // Disable buttons after user makes a choice
             rock.setEnabled(false);
             paper.setEnabled(false);
             scissors.setEnabled(false);
 
+            // Generate a random move for the creature
             String jugadaCriatura = opciones[new Random().nextInt(3)];
             response.setVisibility(View.VISIBLE);
             response.setForeground(ContextCompat.getDrawable(context, obtenerImagen(jugadaCriatura)));
@@ -970,20 +977,22 @@ public class MainActivity extends AppCompatActivity {
             empat = false;
             String missatge;
 
+            // Determine winner based on the Rock-Paper-Scissors rules mapping
             if (userChoice.equals(jugadaCriatura)) {
-                missatge = "Empat!";
+                missatge = "Empat!"; // Tie
                 empat = true;
             } else if (guanyador.get(userChoice).equals(jugadaCriatura)) {
-                missatge = "Has guanyat!";
+                missatge = "Has guanyat!"; // Win
                 response.setForeground(ContextCompat.getDrawable(context, obtenerImagen(jugadaCriatura + "x")));
             } else {
-                missatge = "Has perdut!";
+                missatge = "Has perdut!"; // Lose
                 if (userChoice.equals("pedra")) rock.setForeground(ContextCompat.getDrawable(context, R.drawable.pedrax));
                 else if (userChoice.equals("paper")) paper.setForeground(ContextCompat.getDrawable(context, R.drawable.paperx));
                 else if (userChoice.equals("tisores")) scissors.setForeground(ContextCompat.getDrawable(context, R.drawable.tisoresx));
             }
             Toast.makeText(getApplicationContext(), missatge, Toast.LENGTH_SHORT).show();
 
+            // Delay before closing dialog to show results
             new CountDownTimer(4000, 1000) {
                 @Override
                 public void onTick(long millisUntilFinished) {}
@@ -998,28 +1007,29 @@ public class MainActivity extends AppCompatActivity {
                             zonaOficial = zonaActual;
                         }
 
+                        // Process Capture or Escape logic based on game result
                         if (missatge.equals("Has guanyat!")) {
                             missatgeSuperior.setText("Has agafat un " + criaturaActual.getNom() + "!");
                             if (!criaturesCapturades.containsKey(zonaOficial)) {
                                 criaturesCapturades.put(zonaOficial, new HashSet<>());
                             }
                             criaturesCapturades.get(zonaOficial).add(criaturaActual);
-                            // Sumar punts segons el gènere
+                            
+                            // Add score based on creature genre
                             if (puntsPerGenere.containsKey(genereActual)) {
                                 puntsTotals += puntsPerGenere.get(genereActual);
-                                textoPuntos.setText("Punts: "+puntsTotals);
+                                textoPuntos.setText("Punts: " + puntsTotals);
                             }
 
-
                         } else if (missatge.equals("Has perdut!")) {
-                            missatgeSuperior.setText("S'ha escapat un " + criaturaActual.getNom()+"!");
+                            missatgeSuperior.setText("S'ha escapat un " + criaturaActual.getNom() + "!");
                             if (!criaturesEscapades.containsKey(zonaOficial)) {
                                 criaturesEscapades.put(zonaOficial, new HashSet<>());
                             }
                             criaturesEscapades.get(zonaOficial).add(criaturaActual);
-
                         }
-                        //Añadir un pequeño retardo antes de cerrar el diálogo para asegurarnos que funciona
+
+                        // Short delay before completely closing the dialog
                         new CountDownTimer(2000, 1000) {
                             @Override
                             public void onTick(long millisUntilFinished) {}
@@ -1032,10 +1042,10 @@ public class MainActivity extends AppCompatActivity {
                                 }
                             }
                         }.start();
-
                     }
 
-                     if(empat) {
+                    // If tie, reset buttons to play again
+                    if (empat) {
                         response.setVisibility(View.INVISIBLE);
                         rock.setEnabled(true);
                         paper.setEnabled(true);
@@ -1049,21 +1059,26 @@ public class MainActivity extends AppCompatActivity {
         paper.setOnClickListener(listener);
         scissors.setOnClickListener(listener);
 
+        // Load correct creature image for the dialog
         if (criaturaActual != null) {
             String nomImatge = criaturaActual.getNom().split("_")[0];
             int resID = getResources().getIdentifier(nomImatge.toLowerCase(), "drawable", getPackageName());
-                imgCreature.setImageResource(resID);
-
+            imgCreature.setImageResource(resID);
         }
-        if(!mostrarDialeg) {
+        
+        if (!mostrarDialeg) {
             dialog.show();
-            mostrarDialeg=true;
+            mostrarDialeg = true;
         }
-
     }
-    // método para permitir la lectura del archivo jason
-    public String llegirJSON(Context context, int id) {
 
+    /**
+     * Reads a JSON file from the raw resources directory.
+     * * @param context Application context
+     * @param id Resource ID (e.g., R.raw.zones)
+     * @return String containing the JSON data
+     */
+    public String llegirJSON(Context context, int id) {
         String json = null;
         try {
             InputStream is = context.getResources().openRawResource(id);
@@ -1078,23 +1093,36 @@ public class MainActivity extends AppCompatActivity {
         return json;
     }
 
+    /**
+     * Determines which predefined map zone a specific coordinate pair falls into.
+     * * @param x X-coordinate
+     * @param y Y-coordinate
+     * @return The internal name of the zone, or "Altres" (Others) if outside defined zones
+     */
     private String calcZona(int x, int y) {
         boolean trobat = false;
-        String r = "Altres";
-        Iterator iterator = zones.entrySet().iterator();
-        while(iterator.hasNext() && !trobat){
-           Map.Entry<String, Rect > entry = (Map.Entry<String, Rect>) iterator.next();
-           Rect rect =  entry.getValue();
-           if (rect.contains(x,y)){
-               return  entry.getKey();
-           }
+        String r = "Altres"; // Default fallback zone
+        Iterator<Map.Entry<String, Rect>> iterator = zones.entrySet().iterator();
+        
+        // Traverse the map of zones to check for bounding box collisions
+        while (iterator.hasNext() && !trobat) {
+            Map.Entry<String, Rect> entry = iterator.next();
+            Rect rect = entry.getValue();
+            if (rect.contains(x, y)) {
+                return entry.getKey();
+            }
         }
         return r;
     }
+
+    /**
+     * Procedurally generates the initial population of 500 creatures (125 of each genre)
+     * and assigns them to random coordinates across the map.
+     */
     private void generarCriatures() {
         Random rand = new Random();
 
-        // Asegurar que "Altres" esté en el mapa
+        // Ensure the fallback "Altres" zone exists in the data structure
         if (!critPerZona.containsKey("Altres")) {
             TreeMap<String, HashSet<Criatures>> aux2 = new TreeMap<>();
             for (String g : generes) {
@@ -1104,12 +1132,14 @@ public class MainActivity extends AppCompatActivity {
         }
 
         for (String genere : generes) {
-
+            // Spawn 125 creatures per genre
             for (int i = 0; i < 125; i++) {
+                // Generate name format: Genre[1-8]_[ID]
                 String nom = genere + (rand.nextInt(8) + 1) + "_" + i;
                 Criatures criatura = new Criatures(nom, rand.nextInt(bmp.getWidth()), rand.nextInt(bmp.getHeight()));
                 String zona = calcZona(criatura.getX(), criatura.getY());
 
+                // Retrieve or initialize the zone map
                 TreeMap<String, HashSet<Criatures>> aux = critPerZona.get(zona);
                 if (aux == null) {
                     aux = new TreeMap<>();
@@ -1119,6 +1149,7 @@ public class MainActivity extends AppCompatActivity {
                     critPerZona.put(zona, aux);
                 }
 
+                // Add creature to the corresponding Set
                 HashSet<Criatures> aux2 = aux.get(genere);
                 if (aux2 == null) {
                     aux2 = new HashSet<>();
@@ -1130,25 +1161,31 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    //Aquest mètode conté el codi necessaru per actualitzar el text de criatures
+    /**
+     * Updates the text view displaying detailed game statistics (Zones, Captures, Escapes)
+     * dynamically formatting the text with HTML tags for coloring and bolding.
+     */
     private void actualitzarTextCriatures() {
         StringBuilder text = new StringBuilder();
 
         if (botonesCriaturasRadio.isChecked()) {
-            // Mostrar: criatures per zona i gÃ¨nere
+            // Display: Active creatures per zone and genre
             text.append("<strong>Criatures per zona:</strong><br>");
             for (String zona : critPerZona.keySet()) {
                 text.append("A la zona ").append(zona).append(" hi ha:<br>");
                 TreeMap<String, HashSet<Criatures>> perGenere = critPerZona.get(zona);
+                
                 for (String genere : perGenere.keySet()) {
                     int count = perGenere.get(genere).size();
                     String color = "gray";
+                    
+                    // Apply visual color coding based on creature type
                     if (genere.equals("aiguard")) color = "black";
                     else if (genere.equals("focguard")) color = "green";
                     else if (genere.equals("tornadrac")) color = "red";
                     else if (genere.equals("vapordrac")) color = "blue";
 
-                    if(count>0) {
+                    if (count > 0) {
                         text.append("&nbsp;&nbsp;<font color='").append(color).append("'>")
                                 .append(count).append(" ").append(genere).append("</font><br>");
                     }
@@ -1157,58 +1194,63 @@ public class MainActivity extends AppCompatActivity {
             }
 
         } else if (botonesZonasRdio.isChecked()) {
-            // Mostrar zones amb coordenades (a partir dels Rect a TreeMap zones)
+            // Display: List of zones and their map coordinates
             text.append("<strong>ZONES DEL MAPA</strong><br>");
             for (Map.Entry<String, Rect> entry : zones.entrySet()) {
                 String zona = entry.getKey();
                 Rect r = entry.getValue();
                 String nomOficial = nomsOficials.getOrDefault(zona, "Altres");
+                
                 text.append(zona).append(" (").append(nomOficial).append("): ")
                         .append("(").append(r.left).append(",").append(r.top).append(" - ")
                         .append(r.right).append(",").append(r.bottom).append(")<br>");
             }
 
-        }else if (botonesCapturadasRadio.isChecked()) {
-        // Mostrar criatures capturades
-        text.append("<strong>Criatures que he agafat:</strong><br>");
-        for (Map.Entry<String, HashSet<Criatures>> entry : criaturesCapturades.entrySet()) {
-            String zona = entry.getKey();
-            for (Criatures c : entry.getValue()) {
-                text.append(c.getNom()).append(" a la zona ").append(zona).append("<br>");
+        } else if (botonesCapturadasRadio.isChecked()) {
+            // Display: Successfully captured creatures log
+            text.append("<strong>Criatures que he agafat:</strong><br>");
+            for (Map.Entry<String, HashSet<Criatures>> entry : criaturesCapturades.entrySet()) {
+                String zona = entry.getKey();
+                for (Criatures c : entry.getValue()) {
+                    text.append(c.getNom()).append(" a la zona ").append(zona).append("<br>");
+                }
+            }
+
+        } else if (botonesEscapadasRadio.isChecked()) {
+            // Display: Escaped creatures log
+            text.append("<strong>Criatures que han escapat:</strong><br>");
+            for (Map.Entry<String, HashSet<Criatures>> entry : criaturesEscapades.entrySet()) {
+                String zona = entry.getKey();
+                for (Criatures c : entry.getValue()) {
+                    text.append(c.getNom()).append(" a la zona ").append(zona).append("<br>");
+                }
             }
         }
 
-    } else if (botonesEscapadasRadio.isChecked()) {
-        // Mostrar criatures escapades
-        text.append("<strong>Criatures que han escapat:</strong><br>");
-        for (Map.Entry<String, HashSet<Criatures>> entry : criaturesEscapades.entrySet()) {
-            String zona = entry.getKey();
-            for (Criatures c : entry.getValue()) {
-                text.append(c.getNom()).append(" a la zona ").append(zona).append("<br>");
-            }
-        }
-    }
-
+        // Parse HTML and set the text
         informacio.setText(Html.fromHtml(text.toString()));
     }
 
-
-    //Gràcies a aquest codi podem pintar les criatures quan es pitja sobre el botó criatures
+    /**
+     * Renders the Inventory view on the Canvas.
+     * Displays a matrix of all possible species and adds a checkmark if captured.
+     */
     private void pintarInventari() {
         if (!dibuix.getHolder().getSurface().isValid()) return;
 
         Canvas canvas = dibuix.getHolder().lockCanvas();
-        canvas.drawColor(Color.WHITE);
+        canvas.drawColor(Color.WHITE); // Inventory background
 
         int marge = 20;
         int files = generes.length;
-        int columnes = 8; //Espècies de 1 a 8
+        int columnes = 8; // Species 1 through 8 per genre
         int ample = dibuix.getWidth();
         int alt = dibuix.getHeight();
 
         int ampleCriatura = (ample - (columnes + 1) * marge) / columnes;
         int altCriatura = (alt - (files + 1) * marge) / files;
 
+        // Ensure consistent alphabetical rendering order
         TreeSet<String> generesOrdenats = new TreeSet<>();
         for (String g : generes) generesOrdenats.add(g);
 
@@ -1220,9 +1262,9 @@ public class MainActivity extends AppCompatActivity {
                 int y = marge + fila * (altCriatura + marge);
 
                 String prefix = genere + especie;
-
                 boolean capturada = false;
-                //Cercar en tots els conjunts de criatures capturades
+                
+                // Check if this specific species variant has been captured in any zone
                 for (HashSet<Criatures> conjunt : criaturesCapturades.values()) {
                     for (Criatures c : conjunt) {
                         if (c.getNom().startsWith(prefix)) {
@@ -1233,7 +1275,7 @@ public class MainActivity extends AppCompatActivity {
                     if (capturada) break;
                 }
 
-                //Pintar imatge criatura
+                // Render the base species image
                 String nomImatge = genere + especie;
                 int resID = getResources().getIdentifier(nomImatge.toLowerCase(), "drawable", getPackageName());
                 if (resID != 0) {
@@ -1242,7 +1284,7 @@ public class MainActivity extends AppCompatActivity {
                     Rect dst = new Rect(x, y, x + ampleCriatura, y + altCriatura);
                     canvas.drawBitmap(bmpCriatura, src, dst, new Paint());
 
-                    //Si està capturada, posar un check
+                    // Render a checkmark overlay if the creature has been captured
                     if (capturada) {
                         Bitmap bmpCheck = BitmapFactory.decodeResource(getResources(), R.drawable.check);
                         Rect dstCheck = new Rect(x, y, x + ampleCriatura, y + altCriatura);
@@ -1255,5 +1297,4 @@ public class MainActivity extends AppCompatActivity {
 
         dibuix.getHolder().unlockCanvasAndPost(canvas);
     }
-
 }

@@ -1,7 +1,7 @@
 # 🐉 Poke-UIB: El Món Místic a la UIB
 
 <p align="center">
-  <img src="screenshots/menu_principal.jpg" width="900" alt="Poke-UIB Main Menu">
+  <img src="screenshots/menu.jpg" width="900" alt="Poke-UIB Main Menu">
 </p>
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)

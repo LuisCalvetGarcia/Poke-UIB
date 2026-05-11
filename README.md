@@ -31,7 +31,7 @@ The game features a high-resolution map (6144x4096 px) of the UIB campus.
 When a collision occurs between the player and a creature's coordinates, the map exploration pauses and a "Rock, Paper, Scissors" challenge begins. As shown in the duel interface below, players must select one of the three items (Pedra, Paper, or Tisores) to negotiate with the mystical entity.
 
 <p align="center">
-  <img src="screenshots/duelo_criaturas.jpg" width="600" alt="Rock, Paper, Scissors Duel Interface">
+  <img src="screenshots/1VS1.jpg" width="600" alt="Rock, Paper, Scissors Duel Interface">
 </p>
 
 * **Win:** The creature accepts the pact, is added to your **Captured Inventory**, and you gain points based on the creature's rarity.

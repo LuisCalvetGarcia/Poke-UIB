@@ -1,7 +1,7 @@
 # 🐉 Poke UIB
 
 <p align="center">
-  <img src="screenshots/menu.jpg" width="900" alt="Poke-UIB Main Menu">
+  <img src="screenshots/menu_principal.jpg" width="900" alt="Poke-UIB Main Menu">
 </p>
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -28,10 +28,15 @@ The game features a high-resolution map (6144x4096 px) of the UIB campus.
 </p>
 
 ### 2. The Capture Mini-Game (The Pact)
-When a collision occurs between the player and a creature, a "Rock, Paper, Scissors" challenge begins.
-* **Win:** The creature is added to your **Captured Inventory** and you gain points.
-* **Loss:** The creature escapes and is logged in the **Escaped History**.
-* **Draw:** The round is repeated until a winner is decided.
+When a collision occurs between the player and a creature's coordinates, the map exploration pauses and a "Rock, Paper, Scissors" challenge begins. As shown in the duel interface below, players must select one of the three items (Pedra, Paper, or Tisores) to negotiate with the mystical entity.
+
+<p align="center">
+  <img src="screenshots/duelo_criaturas.jpg" width="600" alt="Rock, Paper, Scissors Duel Interface">
+</p>
+
+* **Win:** The creature accepts the pact, is added to your **Captured Inventory**, and you gain points based on the creature's rarity.
+* **Loss:** The creature rejects the negotiation, escapes the map permanently, and is logged in the **Escaped History**.
+* **Draw:** The interface resets and the round is repeated until a definitive winner is decided.
 
 ### 3. Real-Time Data Visualization
 The application provides detailed reports of the campus ecosystem:
